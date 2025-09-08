@@ -109,10 +109,11 @@ private:
 // Usage example
 int main() {
     // Enumerate audio devices
-    auto audioDevices = DeviceManager::EnumerateDevices(GUID_DEVCLASS_AUDIO);
+    std::vector<DeviceInfo> audioDevices = DeviceManager::EnumerateDevices(GUID_DEVCLASS_AUDIO);
     
     std::wcout << L"Audio Devices:" << std::endl;
-    for (const auto& device : audioDevices) {
+    for (size_t i = 0; i < audioDevices.size(); i++) {
+        const DeviceInfo& device = audioDevices[i];
         std::wcout << L"  " << device.description << L" (" << device.instanceId << L")" << std::endl;
         
         // Enable/disable Realtek audio devices
