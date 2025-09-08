@@ -14,13 +14,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1.1
-
     - name: Compile with cl.exe
       run: |
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-        cl.exe /EHsc /W4 /std:c++17 main.cpp /link setupapi.lib cfgmgr32.lib shell32.lib advapi32.lib user32.lib /OUT:DeviceManager.exe
+        cl.exe /EHsc /W4 /std:c++17 main.cpp /link setupapi.lib cfgmgr32.lib /OUT:DeviceManager.exe
       shell: cmd
 
     - name: Verify build
