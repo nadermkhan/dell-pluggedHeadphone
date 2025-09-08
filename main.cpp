@@ -5,9 +5,13 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <initguid.h>  // Add this to enable GUID definitions
 
 #pragma comment(lib, "setupapi.lib")
 #pragma comment(lib, "cfgmgr32.lib")
+
+// Define GUID_DEVCLASS_AUDIO if not already defined
+DEFINE_GUID(GUID_DEVCLASS_AUDIO, 0x4d36e96c, 0xe325, 0x11ce, 0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18);
 
 struct DeviceInfo {
     std::wstring instanceId;
