@@ -17,25 +17,19 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.1
 
-    - name: Create build directory
+    - name: Compile with cl.exe
       run: |
-        mkdir build
-        cd build
-
-    - name: Compile with cl.exe (Visual Studio Compiler)
-      run: |
-        # Use Developer Command Prompt environment
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-        cl.exe /EHsc /W4 /std:c++17 ../main.cpp /link setupapi.lib cfgmgr32.lib shell32.lib advapi32.lib user32.lib /OUT:DeviceManager.exe
+        cl.exe /EHsc /W4 /std:c++17 main.cpp /link setupapi.lib cfgmgr32.lib shell32.lib advapi32.lib user32.lib /OUT:DeviceManager.exe
       shell: cmd
 
     - name: Verify build
       run: |
         if exist DeviceManager.exe (
-          echo "Build successful!"
+          echo Build successful!
           dir DeviceManager.exe
         ) else (
-          echo "Build failed!"
+          echo Build failed!
           exit /b 1
         )
       shell: cmd
