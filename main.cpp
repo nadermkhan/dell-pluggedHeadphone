@@ -31,18 +31,18 @@ public:
             DeviceInfo deviceInfo;
             
             // Get device description
-            TCHAR description[256];
+            WCHAR description[256];
             DWORD dataType, size = sizeof(description);
-            if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData,
+            if (SetupDiGetDeviceRegistryPropertyW(deviceInfoSet, &deviceInfoData,
                                                SPDRP_DEVICEDESC, &dataType,
                                                (PBYTE)description, size, &size)) {
                 deviceInfo.description = description;
             }
             
             // Get instance ID
-            TCHAR instanceId[256];
-            if (SetupDiGetDeviceInstanceId(deviceInfoSet, &deviceInfoData,
-                                         instanceId, sizeof(instanceId)/sizeof(TCHAR), NULL)) {
+            WCHAR instanceId[256];
+            if (SetupDiGetDeviceInstanceIdW(deviceInfoSet, &deviceInfoData,
+                                         instanceId, sizeof(instanceId)/sizeof(WCHAR), NULL)) {
                 deviceInfo.instanceId = instanceId;
             }
             
@@ -58,14 +58,11 @@ public:
         DEVINST devInst;
         CONFIGRET cr;
 
-        cr = CM_Locate_DevNode(&devInst, const_cast<DEVINSTID_W>(instanceId.c_str()), CM_LOCATE_DEVNODE_NORMAL);
+        cr = CM_Locate_DevNodeW(&devInst, const_cast<LPWSTR>(instanceId.c_str()), CM_LOCATE_DEVNODE_NORMAL);
         if (cr != CR_SUCCESS) {
             return false;
         }
 
-        DWORD stateChange = enable ? DICS_ENABLE : DICS_DISABLE;
-        cr = CM_Request_Device_Eject(devInst, NULL, NULL, 0, 0); // This might not be correct
-        
         // Alternative approach using SetupAPI
         return EnableDisableDeviceSetupAPI(instanceId, enable);
     }
@@ -82,10 +79,10 @@ private:
         bool found = false;
 
         for (DWORD i = 0; SetupDiEnumDeviceInfo(deviceInfoSet, i, &deviceInfoData) && !found; i++) {
-            TCHAR currentInstanceId[256];
-            if (SetupDiGetDeviceInstanceId(deviceInfoSet, &deviceInfoData,
-                                         currentInstanceId, sizeof(currentInstanceId)/sizeof(TCHAR), NULL)) {
-                if (instanceId == currentInstanceId) {
+            WCHAR currentInstanceId[256];
+            if (SetupDiGetDeviceInstanceIdW(deviceInfoSet, &deviceInfoData,
+                                         currentInstanceId, sizeof(currentInstanceId)/sizeof(WCHAR), NULL)) {
+                if (instanceId == std::wstring(currentInstanceId)) {
                     found = true;
                     
                     SP_PROPCHANGE_PARAMS propChangeParams = {0};
