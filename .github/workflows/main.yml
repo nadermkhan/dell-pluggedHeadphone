@@ -1,0 +1,48 @@
+name: Build Win32 Executable
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Create build directory
+      run: |
+        mkdir build
+        cd build
+
+    - name: Compile with cl.exe (Visual Studio Compiler)
+      run: |
+        # Use Developer Command Prompt environment
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        cl.exe /EHsc /W4 /std:c++17 ../main.cpp /link setupapi.lib cfgmgr32.lib shell32.lib advapi32.lib user32.lib /OUT:DeviceManager.exe
+      shell: cmd
+
+    - name: Verify build
+      run: |
+        if exist DeviceManager.exe (
+          echo "Build successful!"
+          dir DeviceManager.exe
+        ) else (
+          echo "Build failed!"
+          exit /b 1
+        )
+      shell: cmd
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: DeviceManager-executable
+        path: DeviceManager.exe
+        if-no-files-found: error
