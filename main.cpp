@@ -1,3 +1,5 @@
+#define UNICODE
+#define _UNICODE
 #include <windows.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
@@ -16,10 +18,11 @@
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "oleaut32.lib")
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "gdi32.lib")
 
-// Define GUIDs
+// Define GUIDs (remove duplicate GUID_DEVCLASS_MEDIA)
 DEFINE_GUID(GUID_DEVCLASS_AUDIO, 0x4d36e96c, 0xe325, 0x11ce, 0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18);
-DEFINE_GUID(GUID_DEVCLASS_MEDIA, 0x4d36e96c, 0xe325, 0x11ce, 0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18);
 
 // Window controls IDs
 #define ID_BTN_DETECT 1001
@@ -222,45 +225,45 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     case WM_CREATE:
         {
             // Create controls
-            CreateWindow(L"BUTTON", L"Detect Headphones",
+            CreateWindowW(L"BUTTON", L"Detect Headphones",
                 WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 10, 10, 150, 30,
                 hwnd, (HMENU)ID_BTN_DETECT, NULL, NULL);
             
-            CreateWindow(L"BUTTON", L"Refresh Realtek",
+            CreateWindowW(L"BUTTON", L"Refresh Realtek",
                 WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 170, 10, 150, 30,
                 hwnd, (HMENU)ID_BTN_REFRESH, NULL, NULL);
             
-            CreateWindow(L"BUTTON", L"Disable Selected",
+            CreateWindowW(L"BUTTON", L"Disable Selected",
                 WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 330, 10, 120, 30,
                 hwnd, (HMENU)ID_BTN_DISABLE, NULL, NULL);
             
-            CreateWindow(L"BUTTON", L"Enable Selected",
+            CreateWindowW(L"BUTTON", L"Enable Selected",
                 WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 460, 10, 120, 30,
                 hwnd, (HMENU)ID_BTN_ENABLE, NULL, NULL);
             
-            g_hAutoDetectCheck = CreateWindow(L"BUTTON", L"Auto-detect",
+            g_hAutoDetectCheck = CreateWindowW(L"BUTTON", L"Auto-detect",
                 WS_VISIBLE | WS_CHILD | BS_CHECKBOX,
                 590, 10, 100, 30,
                 hwnd, (HMENU)ID_CHECK_AUTODETECT, NULL, NULL);
             
             // Create status text
-            g_hStatusText = CreateWindow(L"STATIC", L"Status: Ready",
+            g_hStatusText = CreateWindowW(L"STATIC", L"Status: Ready",
                 WS_VISIBLE | WS_CHILD | SS_LEFT,
                 10, 50, 680, 30,
                 hwnd, (HMENU)ID_STATIC_STATUS, NULL, NULL);
             
             // Create list box for devices
-            g_hListBox = CreateWindow(L"LISTBOX", NULL,
+            g_hListBox = CreateWindowW(L"LISTBOX", NULL,
                 WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY,
                 10, 90, 680, 350,
                 hwnd, (HMENU)ID_LIST_DEVICES, NULL, NULL);
             
             // Set font
-            HFONT hFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            HFONT hFont = CreateFontW(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                 ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                 DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
             
@@ -283,7 +286,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     
                     // Detect headphones
                     std::wstring headphoneStatus = AudioDeviceManager::DetectHeadphones();
-                    SetWindowText(g_hStatusText, (L"Status: " + headphoneStatus).c_str());
+                    SetWindowTextW(g_hStatusText, (L"Status: " + headphoneStatus).c_str());
                     
                     // Enumerate devices
                     auto devices = AudioDeviceManager::EnumerateAudioDevices();
@@ -292,7 +295,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if (device.isRealtek) displayText += L" [REALTEK]";
                         displayText += L" - " + device.status;
                         
-                        int index = SendMessage(g_hListBox, LB_ADDSTRING, 0, (LPARAM)displayText.c_str());
+                        int index = (int)SendMessageW(g_hListBox, LB_ADDSTRING, 0, (LPARAM)displayText.c_str());
                         SendMessage(g_hListBox, LB_SETITEMDATA, index, (LPARAM)new std::wstring(device.instanceId));
                     }
                 }
@@ -300,7 +303,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 
             case ID_BTN_REFRESH:
                 {
-                    SetWindowText(g_hStatusText, L"Status: Refreshing Realtek devices...");
+                    SetWindowTextW(g_hStatusText, L"Status: Refreshing Realtek devices...");
                     
                     auto devices = AudioDeviceManager::EnumerateAudioDevices();
                     int refreshed = 0;
@@ -314,7 +317,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     
                     std::wstring status = L"Status: Refreshed " + std::to_wstring(refreshed) + L" Realtek device(s)";
-                    SetWindowText(g_hStatusText, status.c_str());
+                    SetWindowTextW(g_hStatusText, status.c_str());
                     
                     // Refresh the list
                     PostMessage(hwnd, WM_COMMAND, ID_BTN_DETECT, 0);
@@ -324,24 +327,24 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             case ID_BTN_DISABLE:
             case ID_BTN_ENABLE:
                 {
-                    int selected = SendMessage(g_hListBox, LB_GETCURSEL, 0, 0);
+                    int selected = (int)SendMessage(g_hListBox, LB_GETCURSEL, 0, 0);
                     if (selected != LB_ERR) {
                         std::wstring* instanceId = (std::wstring*)SendMessage(g_hListBox, LB_GETITEMDATA, selected, 0);
                         if (instanceId) {
                             bool enable = (wmId == ID_BTN_ENABLE);
                             if (AudioDeviceManager::SetDeviceState(*instanceId, enable)) {
                                 std::wstring status = enable ? L"Status: Device enabled" : L"Status: Device disabled";
-                                SetWindowText(g_hStatusText, status.c_str());
+                                SetWindowTextW(g_hStatusText, status.c_str());
                                 
                                 // Refresh the list
                                 Sleep(500);
                                 PostMessage(hwnd, WM_COMMAND, ID_BTN_DETECT, 0);
                             } else {
-                                SetWindowText(g_hStatusText, L"Status: Failed to change device state");
+                                SetWindowTextW(g_hStatusText, L"Status: Failed to change device state");
                             }
                         }
                     } else {
-                        SetWindowText(g_hStatusText, L"Status: Please select a device first");
+                        SetWindowTextW(g_hStatusText, L"Status: Please select a device first");
                     }
                 }
                 break;
@@ -351,10 +354,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     g_AutoDetect = (SendMessage(g_hAutoDetectCheck, BM_GETCHECK, 0, 0) == BST_CHECKED);
                     if (g_AutoDetect) {
                         SetTimer(hwnd, ID_TIMER_DETECT, 2000, NULL); // Check every 2 seconds
-                        SetWindowText(g_hStatusText, L"Status: Auto-detection enabled");
+                        SetWindowTextW(g_hStatusText, L"Status: Auto-detection enabled");
                     } else {
                         KillTimer(hwnd, ID_TIMER_DETECT);
-                        SetWindowText(g_hStatusText, L"Status: Auto-detection disabled");
+                        SetWindowTextW(g_hStatusText, L"Status: Auto-detection disabled");
                     }
                 }
                 break;
@@ -366,7 +369,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         if (wParam == ID_TIMER_DETECT) {
             // Auto-detect headphones
             std::wstring headphoneStatus = AudioDeviceManager::DetectHeadphones();
-            SetWindowText(g_hStatusText, (L"Status: " + headphoneStatus).c_str());
+            SetWindowTextW(g_hStatusText, (L"Status: " + headphoneStatus).c_str());
         }
         return 0;
         
@@ -385,7 +388,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     case WM_DESTROY:
         // Clean up item data
         {
-            int count = SendMessage(g_hListBox, LB_GETCOUNT, 0, 0);
+            int count = (int)SendMessage(g_hListBox, LB_GETCOUNT, 0, 0);
             for (int i = 0; i < count; i++) {
                 std::wstring* instanceId = (std::wstring*)SendMessage(g_hListBox, LB_GETITEMDATA, i, 0);
                 if (instanceId) delete instanceId;
@@ -423,7 +426,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Register window class
     const wchar_t CLASS_NAME[] = L"AudioDeviceManager";
     
-    WNDCLASS wc = {};
+    WNDCLASSW wc = {};
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
@@ -431,13 +434,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     
-    if (!RegisterClass(&wc)) {
-        MessageBox(NULL, L"Window Registration Failed!", L"Error", MB_ICONEXCLAMATION | MB_OK);
+    if (!RegisterClassW(&wc)) {
+        MessageBoxW(NULL, L"Window Registration Failed!", L"Error", MB_ICONEXCLAMATION | MB_OK);
         return 0;
     }
     
     // Create window
-    g_hWnd = CreateWindowEx(
+    g_hWnd = CreateWindowExW(
         0,
         CLASS_NAME,
         L"Audio Device Manager - Headphone Detector & Realtek Refresher",
@@ -450,7 +453,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     );
     
     if (g_hWnd == NULL) {
-        MessageBox(NULL, L"Window Creation Failed!", L"Error", MB_ICONEXCLAMATION | MB_OK);
+        MessageBoxW(NULL, L"Window Creation Failed!", L"Error", MB_ICONEXCLAMATION | MB_OK);
         return 0;
     }
     
